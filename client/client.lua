@@ -2,10 +2,10 @@ local myPlants, nearField = {}, nil
 local prompt, prompt2 = false, false
 local DelPrompt
 local PlantPrompt
-
+math.randomseed(GetGameTimer())
 function SetupDelPrompt()
     Citizen.CreateThread(function()
-        local str = 'Remove Plant'
+        local str = 'Cancel'
         DelPrompt = PromptRegisterBegin()
         PromptSetControlAction(DelPrompt, 0xE8342FF2)
         str = CreateVarString(10, 'LITERAL_STRING', str)
@@ -33,85 +33,109 @@ function SetupPlantPrompt()
     end)
 end
 
+
 RegisterNetEvent('poke_planting:planto1')
 AddEventHandler('poke_planting:planto1', function(hash1, hash2, hash3)
     local myPed = PlayerPedId()
     local pHead = GetEntityHeading(myPed)
-    local pos = GetEntityCoords(PlayerPedId(), true)
+    local pos = GetEntityCoords(PlayerPedId())
     local plant1 = GetHashKey(hash1)
     for k,v in pairs(Config.Locations) do
-        if GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) < 30.0 then
+        if hash1 == "CRP_GINSENG_AB_SIM" and k < 6 then
 
-		if not HasModelLoaded(plant1) then
-		    RequestModel(plant1)
-		end
+        else
+            if Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) < 50.0 then
 
-		while not HasModelLoaded(plant1) do
-		    Citizen.Wait(1)
-		end
 
-		local placing = true
-		local tempObj = CreateObject(plant1, pos.x, pos.y, pos.z, true, true, false)
-		SetEntityHeading(tempObj, pHead)
-		SetEntityAlpha(tempObj, 51)
-		AttachEntityToEntity(tempObj, myPed, 0, 0.0, 1.0, -0.7, 0.0, 0.0, 0.0, true, false, false, false, false)
-		while placing do
-		    Wait(10)
-		    if prompt == false then
-			PromptSetEnabled(PlantPrompt, true)
-			PromptSetVisible(PlantPrompt, true)
-			prompt = true
-		    end
-		    if PromptHasHoldModeCompleted(PlantPrompt) then
-			PromptSetEnabled(PlantPrompt, false)
-			PromptSetVisible(PlantPrompt, false)
-			PromptSetEnabled(DelPrompt, false)
-			PromptSetVisible(DelPrompt, false)
-			prompt = false
-			prompt2 = false
-			local pPos = GetEntityCoords(tempObj, true)
-			DeleteObject(tempObj)
-			animacion()
-			local object = CreateObject(plant1, pPos.x, pPos.y, pPos.z, true, true, false)
-			myPlants[#myPlants+1] = {["object"] = object, ['x'] = pPos.x, ['y'] = pPos.y, ['z'] = pPos.z, ['stage'] = 1, ['hash'] = hash1, ['hash2'] = hash2, ['hash3'] = hash3,}
-			local plantCount = #myPlants
-			PlaceObjectOnGroundProperly(myPlants[plantCount].object)
-			SetEntityAsMissionEntity(myPlants[plantCount].object, true)
-			break
-		    end
-		    if prompt2 == false then
-			PromptSetEnabled(DelPrompt, true)
-			PromptSetVisible(DelPrompt, true)
-			prompt2 = true
-		    end
-		    if PromptHasHoldModeCompleted(DelPrompt) then
-			PromptSetEnabled(PlantPrompt, false)
-			PromptSetVisible(PlantPrompt, false)
-			PromptSetEnabled(DelPrompt, false)
-			PromptSetVisible(DelPrompt, false)
-			prompt = false
-			prompt2 = false
-			DeleteObject(tempObj)
-			break
-		    end
-		end
-	    end
-	end
+                if not HasModelLoaded(plant1) then
+                    RequestModel(plant1)
+                end
+
+                while not HasModelLoaded(plant1) do
+                    Citizen.Wait(1)
+                end
+
+                local placing = true
+                local tempObj = CreateObject(plant1, pos.x, pos.y, pos.z, false, false, false)
+                SetEntityHeading(tempObj, pHead)
+                SetEntityAlpha(tempObj, 51)
+                AttachEntityToEntity(tempObj, myPed, 0, 0.0, 1.0, -0.7, 0.0, 0.0, 0.0, true, false, false, false, false)
+                while placing do
+                    Wait(10)
+                    if prompt == false then
+                        PromptSetEnabled(PlantPrompt, true)
+                        PromptSetVisible(PlantPrompt, true)
+                        prompt = true
+                    end
+                    if PromptHasHoldModeCompleted(PlantPrompt) then
+					if hash1 == "CRP_GINSENG_AB_SIM" then
+						 local szansa = math.random (1,100)
+						if szansa < 5 then
+                        	TriggerEvent('bad_witness:CallWitness', "Swamp Herb", "I saw a man planting suspicious plants in ")
+						end
+					end
+                        PromptSetEnabled(PlantPrompt, false)
+                        PromptSetVisible(PlantPrompt, false)
+                        PromptSetEnabled(DelPrompt, false)
+                        PromptSetVisible(DelPrompt, false)
+                        prompt = false
+                        prompt2 = false
+                        local pPos = GetEntityCoords(tempObj)
+                        DeleteObject(tempObj)
+                        animacion()
+                        local object = CreateObject(plant1, pPos.x, pPos.y, pPos.z, true, true, false)
+                        myPlants[#myPlants+1] = {["object"] = object, ['x'] = pPos.x, ['y'] = pPos.y, ['z'] = pPos.z, ['stage'] = 1, ['hash'] = hash1, ['hash2'] = hash2, ['hash3'] = hash3,}
+                        local plantCount = #myPlants
+                        PlaceObjectOnGroundProperly(myPlants[plantCount].object)
+                        SetEntityAsMissionEntity(myPlants[plantCount].object, true)
+                        break
+                    end
+                    if prompt2 == false then
+                        PromptSetEnabled(DelPrompt, true)
+                        PromptSetVisible(DelPrompt, true)
+                        prompt2 = true
+                    end
+                    if PromptHasHoldModeCompleted(DelPrompt) then
+                        PromptSetEnabled(PlantPrompt, false)
+                        PromptSetVisible(PlantPrompt, false)
+                        PromptSetEnabled(DelPrompt, false)
+                        PromptSetVisible(DelPrompt, false)
+                        prompt = false
+                        prompt2 = false
+                        DeleteObject(tempObj)
+                        break
+                    end
+                end
+            end
+        end
+    end
 end)
+
+Citizen.CreateThread(function()
+	for k,v in pairs(Config.Locations) do
+		local blip = N_0x554d9d53f696d002(1664425300, v.x, v.y, v.z)
+		SetBlipSprite(blip, 552659337, 1)
+		Citizen.InvokeNative(0x9CB1A1623062F402, blip, "Farmland")
+    end
+end)
+
+
+local cooldown_wateringcan = 0
 
 RegisterNetEvent('poke_planting:regar1')
 AddEventHandler('poke_planting:regar1', function(source)
-    local pos = GetEntityCoords(PlayerPedId(), true)
+if cooldown_wateringcan <= 1 then
+    local pos = GetEntityCoords(PlayerPedId())
     --local plant2 = GetHashKey("CRP_TOBACCOPLANT_AB_SIM")
     local object = nil
     local key = nil
     local hash1, hash2, hash3 = nil, nil, nil
-    local planta = GetEntityCoords(object, true)
+    local planta = GetEntityCoords(object)
     local x, y, z = nil, nil, nil
     
     for k, v in ipairs(myPlants) do
         if v.stage == 1 then
-            if GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) < 2.0 then
+            if Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) < 2.0 then
                 object = v.object
                 key = k
                 x, y, z = v.x, v.y, v.z
@@ -120,7 +144,8 @@ AddEventHandler('poke_planting:regar1', function(source)
             end
         end
     end
-    
+    cooldown_wateringcan = 1000
+	startCooldown()
     local plant2 = hash2
     
     if DoesEntityExist(object) then
@@ -133,22 +158,36 @@ AddEventHandler('poke_planting:regar1', function(source)
         end
 
         DeleteObject(object)
-        table.remove(myPlants, key)
+        myPlants[key] = "bylo"
         Wait(800)
         local object = CreateObject(plant2, x, y, z, true, true, false)
-        myPlants[#myPlants+1] = {["object"] = object, ['x'] = x, ['y'] = y, ['z'] = z, ['stage'] = 2, ['timer'] = 150, ['hash'] = hash1, ['hash2'] = hash2, ['hash3'] = hash3}
+        myPlants[#myPlants+1] = {["object"] = object, ['x'] = x, ['y'] = y, ['z'] = z, ['stage'] = 2, ['timer'] = 1200, ['hash'] = hash1, ['hash2'] = hash2, ['hash3'] = hash3}
         local plantCount = #myPlants
         PlaceObjectOnGroundProperly(myPlants[plantCount].object)
         SetEntityAsMissionEntity(myPlants[plantCount].object, true)
+		SetModelAsNoLongerNeeded(plant2)
     end
+	end
 end)
+
+function startCooldown()
+    if cooldown_wateringcan > 0 then
+        Citizen.CreateThread(function()
+            while cooldown_wateringcan > 0 do
+                Wait(0)
+                --print(cooldown)
+                cooldown_wateringcan = cooldown_wateringcan - 1
+            end
+        end)
+    end
+end
 
 RegisterNetEvent('poke_planting:fin2')
 AddEventHandler('poke_planting:fin2', function(object2, x, y, z, key, hash1, hash2, hash3)
     --local plant3 = GetHashKey("CRP_TOBACCOPLANT_AC_SIM")
-    local planta2 = GetEntityCoords(object2, true)
+    local planta2 = GetEntityCoords(object2)
     
-    TriggerEvent("redemrp_notification:start", 'Your plant has matured!', 5)
+    TriggerEvent("redemrp_notification:start", 'Your plant is ripe!', 5)
     
     local plant3 = hash3
     
@@ -159,7 +198,7 @@ AddEventHandler('poke_planting:fin2', function(object2, x, y, z, key, hash1, has
     end
     
     DeleteObject(object2)
-    table.remove(myPlants, key)
+    myPlants[key] = "bylo"
     Wait(800)
     local object3 = CreateObject(plant3, x, y, z, true, true, false)
     PlaceObjectOnGroundProperly(object3)
@@ -171,11 +210,11 @@ end)
 
 function harvestPlant(key)
 	TaskStartScenarioInPlace(PlayerPedId(), GetHashKey('WORLD_HUMAN_CROUCH_INSPECT'), 10000, true, false, false, false)
-    exports['progressBars']:startUI(10000, 'Harvesting...')
+    exports['progressBars']:startUI(10000, 'Harvest...')
     Wait(10000)
     ClearPedTasksImmediately(PlayerPedId())
 	DeleteObject(myPlants[key].object)
-	table.remove(myPlants, key)
+	myPlants[key] = "bylo"
 end
 
 Citizen.CreateThread(function()
@@ -183,13 +222,14 @@ Citizen.CreateThread(function()
     SetupDelPrompt()
     while true do
         Wait(1000)
-        local pos = GetEntityCoords(PlayerPedId(), true)
+        local pos = GetEntityCoords(PlayerPedId())
         for k, v in pairs(Config.Locations) do
-            if GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) < 30.0 then
-                nearField = true
-                if myPlants[1] ~= nil then
+            if Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) < 30.0 then
+                nearField = k
+                if myPlants ~= nil then
                     for k, v in ipairs(myPlants) do
-                        if GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) < 30 then
+					if v ~= "bylo" then
+                        if Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) < 30 then
                             if v.stage == 2 then
                                 v.timer = v.timer-1
                                 if v.timer == 0 then
@@ -198,22 +238,25 @@ Citizen.CreateThread(function()
                                     TriggerEvent('poke_planting:fin2', v.object, v.x, v.y, v.z, key, v.hash, v.hash2, v.hash3)
                                 end
                             end    
-                            if v.stage == 3 and GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) <= 2 then
+                            if v.stage == 3 and Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) <= 2 then
                                 if not v.prompt then
                                     v.prompt = true
                                 end
                             end
                                 
-                            if v.stage == 3 and GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) > 3 then
+                            if v.stage == 3 and Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) > 3 then
                                 if v.prompt then
                                     v.prompt = false
                                 end
                             end
                         end
+						end
                     end
                 end
             else
-                nearField = false
+				if nearField == k then
+					nearField = nil
+				end
             end
         end
     end
@@ -221,19 +264,20 @@ end)
 
 Citizen.CreateThread(function()
 	while true do
-		Wait(1)
-		if myPlants[1] ~= nil and nearField then
-			local pos = GetEntityCoords(PlayerPedId(), true)
+		Wait(0)
+		if myPlants ~= nil and nearField then
+			local pos = GetEntityCoords(PlayerPedId())
 			for k, v in ipairs(myPlants) do
-				if GetDistanceBetweenCoords(v.x, v.y, v.z, pos.x, pos.y, pos.z, true) < 7.0 then
+				if v ~= "bylo" then
+				if Vdist(v.x, v.y, v.z, pos.x, pos.y, pos.z) < 7.0 then
 					if v.stage == 1 then
-						DrawText3D(v.x, v.y, v.z, 'Need water!')
+						DrawText3D(v.x, v.y, v.z, 'Needs Water!')
 					end
 					if v.stage == 2 then
 						DrawText3D(v.x, v.y, v.z, 'Growing: ' .. v.timer)
 					end
 					if v.stage == 3 then
-						DrawText3D(v.x, v.y, v.z, 'Ready to harvest! [E]')
+						DrawText3D(v.x, v.y, v.z, 'Get Pickin! [E]')
 					end
 					if v.prompt then
 						if Citizen.InvokeNative(0x91AEF906BCA88877, 0, 0xCEFD9220) then
@@ -243,16 +287,17 @@ Citizen.CreateThread(function()
 						end
 					end
 				end
+				end
 			end
 		end
 	end
 end)
-		
+
 function animacion()
 	PromptSetEnabled(prompt, true)
 	PromptSetVisible(prompt, true)
 	TaskStartScenarioInPlace(PlayerPedId(), GetHashKey('WORLD_HUMAN_FARMER_RAKE'), 10000, true, false, false, false)
-    exports['progressBars']:startUI(10000, 'Raking...')
+    exports['progressBars']:startUI(10000, 'Plowing...')
     Wait(10000)
     ClearPedTasksImmediately(PlayerPedId())
 	Wait(1000)
@@ -305,7 +350,22 @@ AddEventHandler('onResourceStop', function(resource)
 	if resource == GetCurrentResourceName() then
 		for k, v in ipairs(myPlants) do
 			DeleteObject(v.object)
-			table.remove(myPlants, k)
+			myPlants[k] = "bylo"
 		end
 	end
 end)
+
+
+
+function DrawText3D2(x, y, z, text)
+    local onScreen,_x,_y=GetHudScreenPositionFromWorldPosition(x, y, z)
+    local px,py,pz=table.unpack(GetGameplayCamCoord())
+    SetTextScale(0.35, 0.35)
+    SetTextFontForCurrentCommand(1)
+    SetTextColor(255, 255, 255, 215)
+    local str = CreateVarString(10, "LITERAL_STRING", text, Citizen.ResultAsLong())
+    SetTextCentre(1)
+    DisplayText(str,_x,_y)
+    local factor = (string.len(text)) / 150
+    DrawSprite("generic_textures", "hud_menu_4a", _x, _y+0.0125,0.015+ factor, 0.03, 0.1, 100, 1, 1, 190, 0)
+end
